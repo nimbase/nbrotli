@@ -13,7 +13,7 @@
 
 ## About
 
-This is a 100 percent pure Nim port of Brotli (RFC 7932) with no C bindings and no FFI. It aims to be idiomatic Nim and easy to vendor, but it is still experimental and may not be stable. The API can change without notice, error handling is still being hardened, and performance has not been tuned. For production use, validate round trips against the reference `brotli` CLI and pin your dependency. This project is not affiliated with Google.
+**This is a 100% pure Nim port of Brotli** (RFC 7932) with **no C bindings and no FFI** It aims to be idiomatic Nim and easy to vendor, but it is still experimental and may not be stable. The API can change without notice, error handling is still being hardened, and performance has not been tuned. For production use, validate round trips against the reference `brotli` CLI and pin your dependency. This project is not affiliated with Google.
 
 ## Features
 - Pure Nim, no C dependencies
@@ -21,7 +21,22 @@ This is a 100 percent pure Nim port of Brotli (RFC 7932) with no C bindings and 
 - Store (uncompressed) encoder per spec section 11.1 for reliable round trips
 - Large Window Brotli (`WBITS 10..30`, `--large_window`) with lazy ring allocation
 - Streaming incremental decoder (`feed` + `decodeSome`)
+- High-level file API (`compress`, `compressFile`, `compressFromFile`, `decompress`, `decompressFile`, `decompressFromFile`, `readMemFile` with buffer reuse)
+- CLI `nbrotli` / `nbrotli_cli` compatible with `brotli` (`-c`, `-d`, `-q`, `-w`, `--large_window`)
+- Optional SIMD via `nimsimd` (`--features:nimsimd`, `-d:features.nbrotli.nimsimd`, AVX2/SSE2)
 - Zero-copy friendly `BitReader`/`BitWriter` LSB-first core
+
+## Installation
+
+```sh
+nimble install nbrotli
+# or with clue
+clue install nbrotli
+# with SIMD
+clue install --features:nimsimd nbrotli
+# or
+nim c -d:features_nbrotli_nimsimd --path:src ...
+```
 
 ## Examples
 
@@ -33,10 +48,10 @@ import nbrotli
 # from bytes (e.g. readFile, HTTP body)
 let compressed = toBytes(readFile("hello.br"))
 let decompressed = decompress(compressed)          # seq[byte]
-echo cast[string](decompressed)
+echo toString(decompressed)
 
-# from string
-let text = decompress(compressed)                  # string overload
+# string overload
+let text = toString(decompress(compressed))
 echo text
 
 # explicit error handling
@@ -51,18 +66,19 @@ except BrotliError as e:
 ```nim
 import nbrotli
 
-let data = toBytes("Hello World".repeat(1000))
-let enc = compressStore(data)                      # wbits=16 by default
+let data = toBytes(readFile("input.txt"))
+# or: let data = toBytes("Hello World".repeat(1000))
+let enc = compress(data)                           # alias to compressStore, wbits=16 by default
 let dec = decompress(enc)
 assert dec == data
 
 # wbits 10..24
-let enc24 = compressStore(data, wbits = 24)
+let enc24 = compress(data, wbits = 24)
 assert decompress(enc24) == data
 
 # string overloads
 let sEnc = compressStore("hello")
-assert decompress(sEnc) == "hello"
+assert toString(decompress(toBytes(sEnc))) == "hello"
 ```
 
 ### Large Window Brotli
@@ -112,158 +128,88 @@ let all = decompressIncremental(compressed, @[7, 28])
 assert all == decompress(compressed)
 ```
 
-### Benchmarks
+### High-level file API
+
+```nim
+import nbrotli
+
+# simple file roundtrip (uses toBytes/readFile internally)
+compressFile("input.txt", "input.txt.br")
+decompressFile("input.txt.br", "output.txt")
+assert readFile("input.txt") == readFile("output.txt")
+
+# one-shot helpers (read file, compress/decompress)
+let enc2 = compressFromFile("input.txt")
+let dec2 = decompressFromFile("input.txt.br")
+assert toString(dec2) == readFile("input.txt")
+
+# buffer reuse (avoid alloc per chunk) — also available via readMemFile
+var buf: seq[byte] = @[]
+readMemFile("input.txt", buf)                  # reuse buf
+compressFromFile("input.txt", 16, buf)         # reuse buf for output
+decompressFromFile("input.txt.br", buf)
+
+# utilities
+let b = toBytes(readFile("hello.br"))
+let s = toString(b)
 ```
-nbrotli bench — cli vs nbrotli (fair external-process comparison)
-  bench (in-mem) nimsimd: disabled hasAvx2=false
-  nbrotli cli: ./nbrotli_cli SIMD=disabled
-  fair = both clis spawned via shell (brotli -d -c vs nbrotli_cli -d -c); in-mem is warm, no spawn
 
-  empty (0 -> 2 bytes, inf%) q=6
-    nbrotli        : 3.6e+02 ns  0.0 B/s  (decompress in-mem, same process)
-    nbrotli memfile: 22. µs  0.0 B/s  (mmap, in-mem)
-    nbrotli cli    : 6.8 ms  0.0 B/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  0.0 B/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 3.0e+04x (faster)
-    speedup fair cli vs cli: 1.6x (nbrotli faster)
-  hello (11 -> 15 bytes, 1.e+02%) q=6
-    nbrotli        : 5.5e+02 µs  20. KB/s  (decompress in-mem, same process)
-    nbrotli memfile: 3.3e+02 µs  34. KB/s  (mmap, in-mem)
-    nbrotli cli    : 8.4 ms  1.3 KB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  1.0 KB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 20.x (faster)
-    speedup fair cli vs cli: 1.3x (nbrotli faster)
-  repeat 15x5 (75 -> 29 bytes, 4.e+01%) q=6
-    nbrotli        : 9.3e+02 µs  81. KB/s  (decompress in-mem, same process)
-    nbrotli memfile: 8.0e+02 µs  94. KB/s  (mmap, in-mem)
-    nbrotli cli    : 8.5 ms  8.8 KB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 10. ms  7.2 KB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 11.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  complex81 q6 (81 -> 62 bytes, 8.e+01%) q=6
-    nbrotli        : 1.6 ms  51. KB/s  (decompress in-mem, same process)
-    nbrotli memfile: 1.4 ms  58. KB/s  (mmap, in-mem)
-    nbrotli cli    : 9.5 ms  8.5 KB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  7.6 KB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 6.7x (faster)
-    speedup fair cli vs cli: 1.1x (nbrotli faster)
-  complex81 q11 (81 -> 67 bytes, 8.e+01%) q=11
-    nbrotli        : 1.4 ms  58. KB/s  (decompress in-mem, same process)
-    nbrotli memfile: 1.4 ms  60. KB/s  (mmap, in-mem)
-    nbrotli cli    : 10. ms  7.8 KB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  7.7 KB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 7.6x (faster)
-    speedup fair cli vs cli: 1.0x (nbrotli faster)
-  1k_random q6 (1024 -> 271 bytes, 3.e+01%) q=6
-    nbrotli        : 7.5 ms  1.4e+02 KB/s  (decompress in-mem, same process)
-    nbrotli memfile: 7.5 ms  1.4e+02 KB/s  (mmap, in-mem)
-    nbrotli cli    : 16. ms  66. KB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  96. KB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 1.4x (faster)
-    speedup fair cli vs cli: 0.69x (brotli faster)
-  100k_random q6 (100000 -> 273 bytes, 0.3%) q=6
-    nbrotli        : 7.7 ms  13. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 7.8 ms  13. MB/s  (mmap, in-mem)
-    nbrotli cli    : 16. ms  6.3 MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  9.5 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 1.4x (faster)
-    speedup fair cli vs cli: 0.66x (brotli faster)
-  500k_random q6 (500000 -> 273 bytes, 0.05%) q=6
-    nbrotli        : 9.6 ms  52. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 9.6 ms  52. MB/s  (mmap, in-mem)
-    nbrotli cli    : 29. ms  17. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 15. ms  33. MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 1.6x (faster)
-    speedup fair cli vs cli: 0.51x (brotli faster)
-  100k_text q11 (114000 -> 60 bytes, 0.05%) q=11
-    nbrotli        : 2.1 ms  54. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 2.2 ms  53. MB/s  (mmap, in-mem)
-    nbrotli cli    : 11. ms  11. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 12. ms  9.2 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 5.9x (faster)
-    speedup fair cli vs cli: 1.1x (nbrotli faster)
-  500k_text q6 (495000 -> 54 bytes, 0.01%) q=6
-    nbrotli        : 3.1 ms  1.6e+02 MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 3.1 ms  1.6e+02 MB/s  (mmap, in-mem)
-    nbrotli cli    : 24. ms  20. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 22. ms  22. MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 7.1x (faster)
-    speedup fair cli vs cli: 0.91x (brotli faster)
+### CLI
 
-wbits / large window:
-  w10 (30017 -> 34 bytes, 0.1%) q=6 w=10
-    nbrotli        : 7.4e+02 µs  41. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 7.9e+02 µs  38. MB/s  (mmap, in-mem)
-    nbrotli cli    : 8.9 ms  3.4 MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  2.8 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 15.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  w16 (30017 -> 33 bytes, 0.1%) q=6 w=16
-    nbrotli        : 7.9e+02 µs  38. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 8.6e+02 µs  35. MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.4 ms  3.2 MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 12. ms  2.6 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 15.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  w20 (30017 -> 34 bytes, 0.1%) q=6 w=20
-    nbrotli        : 8.2e+02 µs  36. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 8.1e+02 µs  37. MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.3 ms  3.2 MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 12. ms  2.6 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 14.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  w24 (30017 -> 34 bytes, 0.1%) q=6 w=24
-    nbrotli        : 7.9e+02 µs  38. MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 8.1e+02 µs  37. MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.3 ms  3.2 MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 14. ms  2.2 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 18.x (faster)
-    speedup fair cli vs cli: 1.5x (nbrotli faster)
-  lw25 (100000 -> 35 bytes, 0.03%) q=6 lw=25
-    nbrotli        : 9.4e+02 µs  1.1e+02 MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 9.8e+02 µs  1.0e+02 MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.3 ms  11. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  8.8 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 12.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  lw27 (100000 -> 35 bytes, 0.03%) q=6 lw=27
-    nbrotli        : 9.3e+02 µs  1.1e+02 MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 1.0 ms  1.0e+02 MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.1 ms  11. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  9.0 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 12.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
-  lw30 (100000 -> 35 bytes, 0.03%) q=6 lw=30
-    nbrotli        : 9.5e+02 µs  1.1e+02 MB/s  (decompress in-mem, same process)
-    nbrotli memfile: 9.9e+02 µs  1.0e+02 MB/s  (mmap, in-mem)
-    nbrotli cli    : 9.3 ms  11. MB/s  (nbrotli -d -c, external, fair)
-    brotli cli     : 11. ms  9.1 MB/s  (brotli -d -c, external)
-    speedup in-mem vs cli : 12.x (faster)
-    speedup fair cli vs cli: 1.2x (nbrotli faster)
+```sh
+# build
+clue build src/nbrotli_cli.nim --release
+# or with SIMD
+clue build --features:nimsimd src/nbrotli_cli.nim --release
+# also: nim c -d:features_nbrotli_nimsimd --path:src src/nbrotli_cli.nim
 
-store (nbrotli Store encode) vs decode (fair cli vs cli):
-  store w=10 (100017 -> 100025 bytes, 1.e+02%)
-    nbrotli        : 3.8e+02 µs  2.6e+02 MB/s  (decompress in-mem)
-    nbrotli memfile: 4.3e+02 µs  2.3e+02 MB/s  (mmap)
-    nbrotli cli    : 7.4 ms  13. MB/s  (nbrotli -d -c, fair)
-    brotli cli     : 11. ms  9.4 MB/s  (brotli -d -c, fair)
-    fair speedup   : 1.4x (cli vs cli)
-  store w=16 (100017 -> 100024 bytes, 1.e+02%)
-    nbrotli        : 33. µs  3.0 GB/s  (decompress in-mem)
-    nbrotli memfile: 72. µs  1.4 GB/s  (mmap)
-    nbrotli cli    : 7.1 ms  14. MB/s  (nbrotli -d -c, fair)
-    brotli cli     : 11. ms  9.3 MB/s  (brotli -d -c, fair)
-    fair speedup   : 1.5x (cli vs cli)
-  store w=24 (100017 -> 100024 bytes, 1.e+02%)
-    nbrotli        : 36. µs  2.8 GB/s  (decompress in-mem)
-    nbrotli memfile: 78. µs  1.3 GB/s  (mmap)
-    nbrotli cli    : 7.0 ms  14. MB/s  (nbrotli -d -c, fair)
-    brotli cli     : 11. ms  9.3 MB/s  (brotli -d -c, fair)
-    fair speedup   : 1.5x (cli vs cli)
+# compress (Store, wbits 10..24)
+./nbrotli_cli -c input.txt > input.txt.br
+./nbrotli_cli -w 24 -c input.txt -o out.br
 
-done. Run with:
-  clue build tests/bench.nim --release          # scalar
-  clue build --features:nimsimd tests/bench.nim --release  # SIMD
+# decompress (handles q=0..11, wbits 10..30)
+./nbrotli_cli -d -c input.txt.br > output.txt
+brotli -d -c input.txt.br > output.txt  # interoperable
+./nbrotli_cli -d input.txt.br -o output.txt
+
+# large window
+brotli --large_window=30 -q 6 -c input.txt > large.br
+./nbrotli_cli -d -c large.br > out.txt
+```
+
+### SIMD
+
+```sh
+# scalar (default)
+clue build tests/bench.nim --release
+./bench
+
+# SIMD (AVX2/SSE2 on amd64, NEON on arm64)
+clue build --features:nimsimd tests/bench.nim --release
+# or raw nim
+nim c -d:features_nbrotli_nimsimd --path:src tests/bench.nim --release
+./bench
+```
+
+`src/nbrotli/simd.nim` is guarded by `-d:features_nbrotli_nimsimd` (dot form `-d:features.nbrotli.nimsimd` also accepted) and falls back to `copyMem` when disabled or on non-x86.
+
+### Benchmarks
+
+Fair external-process comparison (`brotli -d -c` vs `nbrotli_cli -d -c` via `tests/bench.nim`):
+
+```sh
+clue build src/nbrotli_cli.nim --release
+clue build tests/bench.nim --release && ./bench
+```
+
+Bench compresses corpora with `brotli` cli (`q=6/11`, `w=10..24`, `large_window=25..30`) then benches `nbrotli` in-mem, `nbrotli` mmap, `nbrotli_cli` (fair), `brotli` cli.
+
+### Installation
+
+```sh
+nimble install nbrotli
+# or pin to a commit
+nimble install https://github.com/nimbase/nbrotli@main
 ```
 
 ### ❤ Contributions & Support
