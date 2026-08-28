@@ -1,7 +1,7 @@
 ## Streaming incremental decoder — Phase C
 ## Simple buffered wrapper over BrotliDecompress for chunked input.
 ## Mirrors C BrotliDecoderDecompressStream semantics with feed/decodeSome.
-import decode, utils
+import decode, utils, simd
 
 type
   BrotliDecoderResult* = enum
@@ -31,8 +31,8 @@ proc feed*(d: var BrotliDecoder, data: openArray[byte]) =
   if d.finished or d.errorCode != 0: return
   let oldLen = d.compressed.len
   d.compressed.setLen(oldLen + data.len)
-  for i in 0..<data.len:
-    d.compressed[oldLen + i] = data[i]
+  if data.len > 0:
+    copyMemSimd(addr d.compressed[oldLen], unsafeAddr data[0], data.len)
 
 proc feed*(d: var BrotliDecoder, data: string) =
   feed(d, toBytes(data))
@@ -84,8 +84,7 @@ proc decodeSome*(d: var BrotliDecoder, outBuf: var seq[byte], maxOut = 65536): B
       let toCopy = min(remaining, maxOut)
       let oldLen = outBuf.len
       outBuf.setLen(oldLen + toCopy)
-      for i in 0..<toCopy:
-        outBuf[oldLen + i] = d.decompressed[d.outputPos + i]
+      copyMemSimd(addr outBuf[oldLen], addr d.decompressed[d.outputPos], toCopy)
       d.outputPos += toCopy
       if d.outputPos < d.decompressed.len:
         return NeedsMoreOutput

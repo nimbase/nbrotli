@@ -7,4 +7,7 @@ testresults/
 !/tests/bench
 !/tests/*.nim
 !/tests/*.nims
+!/tests/temp
+/tests/temp/*
+!/tests/temp/.gitkeep
 

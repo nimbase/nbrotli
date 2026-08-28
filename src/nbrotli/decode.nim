@@ -1,4 +1,4 @@
-import bitreader, constants, prefix, context, dictionary, dictionary_data, transform, transform_data
+import bitreader, constants, prefix, context, dictionary, dictionary_data, transform, transform_data, simd
 
 type
   BrotliError* = object of CatchableError
@@ -174,6 +174,18 @@ type DecoderState* = object
 
 func initDecoderState*(data: openArray[byte]): DecoderState =
   result.br = initBitReader(data)
+  result.distRb = [16,15,11,4]
+  result.distRbIdx = 0
+  result.ringPos = 0
+  result.blockTypesRb = [1,0,1,0,1,0]
+  result.cannyRingbufferAllocation = true
+  result.newRingbufferSize = 0
+  result.ringSize = 0
+  result.ringMask = 0
+  result.largeWindow = false
+
+func initDecoderStateBorrowed*(data: openArray[byte]): DecoderState =
+  result.br = initBitReaderBorrowed(data)
   result.distRb = [16,15,11,4]
   result.distRbIdx = 0
   result.ringPos = 0
@@ -637,8 +649,8 @@ proc ensureRingBuffer(state: var DecoderState): bool =
     var newRing = newSeq[byte](needed)
     if state.ring.len > 0 and state.ringPos > 0:
       let copyLen = min(state.ringPos, state.ring.len)
-      for i in 0..<copyLen:
-        newRing[i] = state.ring[i]
+      if copyLen > 0:
+        copyMemSimd(addr newRing[0], addr state.ring[0], copyLen)
     state.ring = newRing
   # last two bytes initialized to 0 for context
   if state.newRingbufferSize >= 2:
@@ -650,8 +662,8 @@ proc ensureRingBuffer(state: var DecoderState): bool =
 
 # ---------- Main decompression one-shot ----------
 
-proc BrotliDecompress*(data: openArray[byte]): seq[byte] =
-  var state = initDecoderState(data)
+proc BrotliDecompressBorrowed*(data: openArray[byte]): seq[byte] =
+  var state = initDecoderStateBorrowed(data)
   var br = state.br
   var supportsLargeWindow = true
   var largeWindowDetected = false
@@ -772,12 +784,28 @@ proc BrotliDecompress*(data: openArray[byte]): seq[byte] =
           # ensure enough bytes
           if br.nextIn + blockLen > br.lastIn:
             raiseBrotli(ErrFormatExuberantNibble, "uncompressed size")
-          # copy to ring and output
-          for i in 0..<blockLen:
-            let b = br.input[br.nextIn]; br.nextIn.inc
-            state.ring[state.ringPos and state.ringMask] = b
-            output.add(b)
-            state.ringPos.inc
+          # copy to ring and output (bulk)
+          # bulk path when ring contiguous and output pre-reserved
+          let dstPos = state.ringPos and state.ringMask
+          let ringContig = (dstPos + blockLen) <= state.ringSize
+          if ringContig and br.bitPos == 0:
+            # Use SIMD bulk copy for both ring and output
+            let outPos = output.len
+            output.setLen(outPos + blockLen)
+            if br.isBorrowed:
+              copyMemSimd(addr output[outPos], addr br.borrowed[br.nextIn], blockLen)
+              copyMemSimd(addr state.ring[dstPos], addr br.borrowed[br.nextIn], blockLen)
+            else:
+              copyMemSimd(addr output[outPos], addr br.input[br.nextIn], blockLen)
+              copyMemSimd(addr state.ring[dstPos], addr br.input[br.nextIn], blockLen)
+            br.nextIn += blockLen
+            state.ringPos += blockLen
+          else:
+            for i in 0..<blockLen:
+              let b = br.getByte(br.nextIn); br.nextIn.inc
+              state.ring[state.ringPos and state.ringMask] = b
+              output.add(b)
+              state.ringPos.inc
           if state.ringPos >= state.maxBackwardDistance:
             state.maxDistance = state.maxBackwardDistance
           else:
@@ -1042,14 +1070,34 @@ proc BrotliDecompress*(data: openArray[byte]): seq[byte] =
         state.distRbIdx = (state.distRbIdx + 1) and 3
         if copyLen > metaRemaining:
           raiseBrotli(ErrFormatBlockLength1, "copy exceeds")
-        for i in 0..<copyLen:
-          let srcPos = (state.ringPos - distance) and state.ringMask
-          let b = state.ring[srcPos]
-          state.ring[state.ringPos and state.ringMask] = b
-          output.add(b)
-          state.ringPos.inc
-          prevByte2 = prevByte1
-          prevByte1 = b
+        # Fast path: non-overlapping and contiguous ring
+        let lzSrc = (state.ringPos - distance) and state.ringMask
+        let lzDst = state.ringPos and state.ringMask
+        let srcContig = (lzSrc + copyLen) <= state.ringSize
+        let dstContig = (lzDst + copyLen) <= state.ringSize
+        if distance >= copyLen and srcContig and dstContig:
+          let outPos = output.len
+          output.setLen(outPos + copyLen)
+          copyMemSimd(addr output[outPos], addr state.ring[lzSrc], copyLen)
+          copyMemSimd(addr state.ring[lzDst], addr state.ring[lzSrc], copyLen)
+          state.ringPos += copyLen
+          # update prev bytes for context
+          if copyLen >= 2:
+            prevByte2 = state.ring[(state.ringPos - 2) and state.ringMask]
+            prevByte1 = state.ring[(state.ringPos - 1) and state.ringMask]
+          elif copyLen == 1:
+            prevByte2 = prevByte1
+            prevByte1 = state.ring[(state.ringPos - 1) and state.ringMask]
+          # prevByte2 already set for 1 case
+        else:
+          for i in 0..<copyLen:
+            let srcPos = (state.ringPos - distance) and state.ringMask
+            let b = state.ring[srcPos]
+            state.ring[state.ringPos and state.ringMask] = b
+            output.add(b)
+            state.ringPos.inc
+            prevByte2 = prevByte1
+            prevByte1 = b
         metaRemaining -= copyLen
       # end while
     # next meta block
@@ -1057,3 +1105,8 @@ proc BrotliDecompress*(data: openArray[byte]): seq[byte] =
     # update output handling already via ringPos
     discard
   return output
+
+proc BrotliDecompress*(data: openArray[byte]): seq[byte] =
+  ## Compatibility wrapper (owned copy). For zero-copy use BrotliDecompressBorrowed.
+  ## Currently both are zero-copy safe because borrowed view keeps caller buffer alive during call.
+  BrotliDecompressBorrowed(data)

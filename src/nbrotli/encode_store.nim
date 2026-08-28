@@ -1,6 +1,6 @@
 ## Store (uncompressed) encoder — RFC 7932 §11.1
 ## Produces universally decodable stream with WBITS=16 (or 10..24).
-import bitwriter, utils
+import bitwriter, utils, simd
 
 const StoreChunkSize* = 1 shl 16  # 65536, recommended; cap is 1<<24
 
@@ -58,8 +58,9 @@ proc compressStoreImpl(data: openArray[byte], wbits: int): seq[byte] =
     encodeBlockLen(bw, chunk)
     bw.writeBits(1, 1)
     bw.emitByteBoundaryZeroPad()
-    for i in 0..<chunk:
-      bw.outBuf.add(data[pos + i])
+    let oldLen = bw.outBuf.len
+    bw.outBuf.setLen(oldLen + chunk)
+    copyMemSimd(addr bw.outBuf[oldLen], unsafeAddr data[pos], chunk)
     pos += chunk
 
   bw.writeBits(1, 1)
