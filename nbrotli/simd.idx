@@ -1,0 +1,8 @@
+nimTitle	simd	nbrotli/simd.html	module nbrotli/simd		0
+nim	simdEnabled	nbrotli/simd.html#simdEnabled	const simdEnabled		8
+nim	hasSimdFeature	nbrotli/simd.html#hasSimdFeature	const hasSimdFeature		20
+nim	hasAvx2	nbrotli/simd.html#hasAvx2	const hasAvx2		21
+nim	copyMemSimd	nbrotli/simd.html#copyMemSimd,pointer,pointer,int	proc copyMemSimd(dst, src: pointer; len: int)		23
+nim	copyBytesSimd	nbrotli/simd.html#copyBytesSimd,seq[byte],int,ptr.UncheckedArray[byte],int,int	proc copyBytesSimd(dst: var seq[byte]; dstPos: int; src: ptr UncheckedArray[byte];\n              srcPos, len: int)		61
+nim	copyRingSimd	nbrotli/simd.html#copyRingSimd,seq[byte],int,ptr.UncheckedArray[byte],int,int	proc copyRingSimd(ring: var seq[byte]; ringPos: int; src: ptr UncheckedArray[byte];\n             srcPos, len: int)		65
+nim	lz77CopySimd	nbrotli/simd.html#lz77CopySimd,seq[byte],int,int,int,int,int	proc lz77CopySimd(ring: var seq[byte]; rpos, spos, copyLen, mask: int; distance: int)		69

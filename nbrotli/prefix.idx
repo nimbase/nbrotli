@@ -1,0 +1,4 @@
+nimTitle	prefix	nbrotli/prefix.html	module nbrotli/prefix		0
+nim	CmdLutElement	nbrotli/prefix.html#CmdLutElement	object CmdLutElement		5
+nim	kBlockLengthPrefixCode	nbrotli/prefix.html#kBlockLengthPrefixCode	const kBlockLengthPrefixCode		13
+nim	kCmdLut	nbrotli/prefix.html#kCmdLut	let kCmdLut		42

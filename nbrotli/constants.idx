@@ -1,0 +1,42 @@
+nimTitle	constants	nbrotli/constants.html	module nbrotli/constants		0
+nim	BrotliContextMapMaxRle	nbrotli/constants.html#BrotliContextMapMaxRle	const BrotliContextMapMaxRle		5
+nim	BrotliMaxNumberOfBlockTypes	nbrotli/constants.html#BrotliMaxNumberOfBlockTypes	const BrotliMaxNumberOfBlockTypes		8
+nim	BrotliNumLiteralSymbols	nbrotli/constants.html#BrotliNumLiteralSymbols	const BrotliNumLiteralSymbols		11
+nim	BrotliNumCommandSymbols	nbrotli/constants.html#BrotliNumCommandSymbols	const BrotliNumCommandSymbols		12
+nim	BrotliNumBlockLenSymbols	nbrotli/constants.html#BrotliNumBlockLenSymbols	const BrotliNumBlockLenSymbols		13
+nim	BrotliMaxContextMapSymbols	nbrotli/constants.html#BrotliMaxContextMapSymbols	const BrotliMaxContextMapSymbols		14
+nim	BrotliMaxBlockTypeSymbols	nbrotli/constants.html#BrotliMaxBlockTypeSymbols	const BrotliMaxBlockTypeSymbols		15
+nim	BrotliRepeatPreviousCodeLength	nbrotli/constants.html#BrotliRepeatPreviousCodeLength	const BrotliRepeatPreviousCodeLength		18
+nim	BrotliRepeatZeroCodeLength	nbrotli/constants.html#BrotliRepeatZeroCodeLength	const BrotliRepeatZeroCodeLength		19
+nim	BrotliCodeLengthCodes	nbrotli/constants.html#BrotliCodeLengthCodes	const BrotliCodeLengthCodes		20
+nim	BrotliInitialRepeatedCodeLength	nbrotli/constants.html#BrotliInitialRepeatedCodeLength	const BrotliInitialRepeatedCodeLength		21
+nim	BrotliLargeMaxDistanceBits	nbrotli/constants.html#BrotliLargeMaxDistanceBits	const BrotliLargeMaxDistanceBits		24
+nim	BrotliLargeMinWbits	nbrotli/constants.html#BrotliLargeMinWbits	const BrotliLargeMinWbits		25
+nim	BrotliLargeMaxWbits	nbrotli/constants.html#BrotliLargeMaxWbits	const BrotliLargeMaxWbits		26
+nim	BrotliNumDistanceShortCodes	nbrotli/constants.html#BrotliNumDistanceShortCodes	const BrotliNumDistanceShortCodes		29
+nim	BrotliMaxNPostfix	nbrotli/constants.html#BrotliMaxNPostfix	const BrotliMaxNPostfix		30
+nim	BrotliMaxNDirect	nbrotli/constants.html#BrotliMaxNDirect	const BrotliMaxNDirect		31
+nim	BrotliMaxDistanceBits	nbrotli/constants.html#BrotliMaxDistanceBits	const BrotliMaxDistanceBits		32
+nim	BrotliNumDistanceSymbolsLarge	nbrotli/constants.html#BrotliNumDistanceSymbolsLarge	const BrotliNumDistanceSymbolsLarge		35
+nim	BrotliNumInsCopyCodes	nbrotli/constants.html#BrotliNumInsCopyCodes	const BrotliNumInsCopyCodes		39
+nim	BrotliLiteralContextBits	nbrotli/constants.html#BrotliLiteralContextBits	const BrotliLiteralContextBits		42
+nim	BrotliDistanceContextBits	nbrotli/constants.html#BrotliDistanceContextBits	const BrotliDistanceContextBits		44
+nim	BrotliWindowGap	nbrotli/constants.html#BrotliWindowGap	const BrotliWindowGap		47
+nim	BrotliMaxDistance	nbrotli/constants.html#BrotliMaxDistance	const BrotliMaxDistance		48
+nim	BrotliMaxAllowedDistance	nbrotli/constants.html#BrotliMaxAllowedDistance	const BrotliMaxAllowedDistance		49
+nim	BrotliHuffmanMaxCodeLength	nbrotli/constants.html#BrotliHuffmanMaxCodeLength	const BrotliHuffmanMaxCodeLength		52
+nim	BrotliHuffmanMaxCodeLengthCodeLength	nbrotli/constants.html#BrotliHuffmanMaxCodeLengthCodeLength	const BrotliHuffmanMaxCodeLengthCodeLength		53
+nim	BrotliHuffmanTableBits	nbrotli/constants.html#BrotliHuffmanTableBits	const BrotliHuffmanTableBits		54
+nim	BrotliHuffmanTableMask	nbrotli/constants.html#BrotliHuffmanTableMask	const BrotliHuffmanTableMask		55
+nim	BrotliHuffmanMaxSize26	nbrotli/constants.html#BrotliHuffmanMaxSize26	const BrotliHuffmanMaxSize26		57
+nim	BrotliHuffmanMaxSize258	nbrotli/constants.html#BrotliHuffmanMaxSize258	const BrotliHuffmanMaxSize258		58
+nim	BrotliHuffmanMaxSize272	nbrotli/constants.html#BrotliHuffmanMaxSize272	const BrotliHuffmanMaxSize272		59
+nim	BrotliBlockSizeCap	nbrotli/constants.html#BrotliBlockSizeCap	const BrotliBlockSizeCap		62
+nim	BrotliMinDictionaryWordLength	nbrotli/constants.html#BrotliMinDictionaryWordLength	const BrotliMinDictionaryWordLength		65
+nim	BrotliMaxDictionaryWordLength	nbrotli/constants.html#BrotliMaxDictionaryWordLength	const BrotliMaxDictionaryWordLength		66
+nim	BrotliRingBufferWriteAheadSlack	nbrotli/constants.html#BrotliRingBufferWriteAheadSlack	const BrotliRingBufferWriteAheadSlack		69
+nim	maxBackwardLimit	nbrotli/constants.html#maxBackwardLimit,int	proc maxBackwardLimit(wbits: int): int		71
+nim	BrotliPrefixCodeRange	nbrotli/constants.html#BrotliPrefixCodeRange	object BrotliPrefixCodeRange		75
+nim	BrotliDistanceCodeLimit	nbrotli/constants.html#BrotliDistanceCodeLimit	object BrotliDistanceCodeLimit		80
+nim	distanceAlphabetSize	nbrotli/constants.html#distanceAlphabetSize,int,int,int	proc distanceAlphabetSize(npostfix, ndirect, maxNbits: int): int		84
+nim	calculateDistanceCodeLimit	nbrotli/constants.html#calculateDistanceCodeLimit,uint32,uint32,uint32	proc calculateDistanceCodeLimit(maxDistance: uint32; npostfix, ndirect: uint32): BrotliDistanceCodeLimit		87

@@ -1,0 +1,16 @@
+nimTitle	fileio	nbrotli/fileio.html	module nbrotli/fileio		0
+nim	compress	nbrotli/fileio.html#compress,openArray[byte],int	proc compress(data: openArray[byte]; wbits = 16): seq[byte]		8
+nim	compress	nbrotli/fileio.html#compress,string,int	proc compress(data: string; wbits = 16): string		12
+nim	compressFile	nbrotli/fileio.html#compressFile,string,string,int	proc compressFile(srcPath, dstPath: string; wbits = 16)		17
+nim	decompressFile	nbrotli/fileio.html#decompressFile,string,string	proc decompressFile(srcPath, dstPath: string)		26
+nim	compressFromFile	nbrotli/fileio.html#compressFromFile,string,int	proc compressFromFile(srcPath: string; wbits = 16): seq[byte]		36
+nim	compressFromFileToString	nbrotli/fileio.html#compressFromFileToString,string,int	proc compressFromFileToString(srcPath: string; wbits = 16): string		48
+nim	compressFromFile	nbrotli/fileio.html#compressFromFile,string,int,seq[byte]	proc compressFromFile(srcPath: string; wbits: int; buf: var seq[byte])		53
+nim	decompressFromFile	nbrotli/fileio.html#decompressFromFile,string	proc decompressFromFile(srcPath: string): seq[byte]		68
+nim	decompressFromFileToString	nbrotli/fileio.html#decompressFromFileToString,string	proc decompressFromFileToString(srcPath: string): string		79
+nim	decompressFromFile	nbrotli/fileio.html#decompressFromFile,string,seq[byte]	proc decompressFromFile(srcPath: string; buf: var seq[byte])		83
+nim	readMemFileCompress	nbrotli/fileio.html#readMemFileCompress,string,int,seq[byte]	proc readMemFileCompress(srcPath: string; wbits: int; outBuf: var seq[byte])		93
+nim	readMemFileDecompress	nbrotli/fileio.html#readMemFileDecompress,string,seq[byte]	proc readMemFileDecompress(srcPath: string; outBuf: var seq[byte])		97
+nimgrp	decompressfromfile	nbrotli/fileio.html#decompressFromFile-procs-all	proc		68
+nimgrp	compressfromfile	nbrotli/fileio.html#compressFromFile-procs-all	proc		36
+nimgrp	compress	nbrotli/fileio.html#compress-procs-all	proc		8

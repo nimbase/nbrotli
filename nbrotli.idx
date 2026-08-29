@@ -1,0 +1,6 @@
+nimTitle	nbrotli	nbrotli.html	module nbrotli		0
+nim	add	nbrotli.html#add,int,int	proc add(x, y: int): int		14
+nim	decompress	nbrotli.html#decompress,openArray[byte]	proc decompress(data: openArray[byte]): seq[byte]		18
+nim	decompress	nbrotli.html#decompress,string	proc decompress(data: string): string		22
+nim	decompressToString	nbrotli.html#decompressToString,openArray[byte]	proc decompressToString(data: openArray[byte]): string		27
+nimgrp	decompress	nbrotli.html#decompress-procs-all	proc		18

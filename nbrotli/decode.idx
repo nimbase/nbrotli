@@ -1,0 +1,43 @@
+nimTitle	decode	nbrotli/decode.html	module nbrotli/decode		0
+nim	BrotliError	nbrotli/decode.html#BrotliError	object BrotliError		4
+nim	ErrFormatExuberantNibble	nbrotli/decode.html#ErrFormatExuberantNibble	const ErrFormatExuberantNibble		9
+nim	ErrFormatReserved	nbrotli/decode.html#ErrFormatReserved	const ErrFormatReserved		10
+nim	ErrFormatExuberantMetaNibble	nbrotli/decode.html#ErrFormatExuberantMetaNibble	const ErrFormatExuberantMetaNibble		11
+nim	ErrFormatSimpleHuffmanAlphabet	nbrotli/decode.html#ErrFormatSimpleHuffmanAlphabet	const ErrFormatSimpleHuffmanAlphabet		12
+nim	ErrFormatSimpleHuffmanSame	nbrotli/decode.html#ErrFormatSimpleHuffmanSame	const ErrFormatSimpleHuffmanSame		13
+nim	ErrFormatClSpace	nbrotli/decode.html#ErrFormatClSpace	const ErrFormatClSpace		14
+nim	ErrFormatHuffmanSpace	nbrotli/decode.html#ErrFormatHuffmanSpace	const ErrFormatHuffmanSpace		15
+nim	ErrFormatContextMapRepeat	nbrotli/decode.html#ErrFormatContextMapRepeat	const ErrFormatContextMapRepeat		16
+nim	ErrFormatBlockLength1	nbrotli/decode.html#ErrFormatBlockLength1	const ErrFormatBlockLength1		17
+nim	ErrFormatBlockLength2	nbrotli/decode.html#ErrFormatBlockLength2	const ErrFormatBlockLength2		18
+nim	ErrFormatTransform	nbrotli/decode.html#ErrFormatTransform	const ErrFormatTransform		19
+nim	ErrFormatDictionary	nbrotli/decode.html#ErrFormatDictionary	const ErrFormatDictionary		20
+nim	ErrFormatWindowBits	nbrotli/decode.html#ErrFormatWindowBits	const ErrFormatWindowBits		21
+nim	ErrFormatPadding1	nbrotli/decode.html#ErrFormatPadding1	const ErrFormatPadding1		22
+nim	ErrFormatPadding2	nbrotli/decode.html#ErrFormatPadding2	const ErrFormatPadding2		23
+nim	ErrFormatDistance	nbrotli/decode.html#ErrFormatDistance	const ErrFormatDistance		24
+nim	ErrUnreachable	nbrotli/decode.html#ErrUnreachable	const ErrUnreachable		25
+nim	raiseBrotli	nbrotli/decode.html#raiseBrotli,int,string	proc raiseBrotli(code: int; msg: string)		27
+nim	HuffmanDecoder	nbrotli/decode.html#HuffmanDecoder	object HuffmanDecoder		34
+nim	reverseBitsN	nbrotli/decode.html#reverseBitsN,uint32,int	proc reverseBitsN(v: uint32; n: int): uint32		39
+nim	initHuffmanDecoder	nbrotli/decode.html#initHuffmanDecoder,openArray[uint8]	proc initHuffmanDecoder(codeLengths: openArray[uint8]): HuffmanDecoder		45
+nim	initHuffmanDecoderEmpty	nbrotli/decode.html#initHuffmanDecoderEmpty	proc initHuffmanDecoderEmpty(): HuffmanDecoder		82
+nim	decodeSymbol	nbrotli/decode.html#decodeSymbol,HuffmanDecoder,BitReader	proc decodeSymbol(h: HuffmanDecoder; br: var BitReader): int		87
+nim	decodeSymbolSafe	nbrotli/decode.html#decodeSymbolSafe,HuffmanDecoder,BitReader,int	proc decodeSymbolSafe(h: HuffmanDecoder; br: var BitReader; outSym: var int): bool		103
+nim	kCodeLengthCodeOrder	nbrotli/decode.html#kCodeLengthCodeOrder	const kCodeLengthCodeOrder		122
+nim	kCodeLengthPrefixLength	nbrotli/decode.html#kCodeLengthPrefixLength	const kCodeLengthPrefixLength		123
+nim	kCodeLengthPrefixValue	nbrotli/decode.html#kCodeLengthPrefixValue	const kCodeLengthPrefixValue		124
+nim	DecoderState	nbrotli/decode.html#DecoderState	object DecoderState		128
+nim	initDecoderState	nbrotli/decode.html#initDecoderState,openArray[byte]	proc initDecoderState(data: openArray[byte]): DecoderState		175
+nim	initDecoderStateBorrowed	nbrotli/decode.html#initDecoderStateBorrowed,openArray[byte]	proc initDecoderStateBorrowed(data: openArray[byte]): DecoderState		187
+nim	log2Floor	nbrotli/decode.html#log2Floor,uint32	proc log2Floor(x: uint32): uint32		201
+nim	decodeVarLenUint8	nbrotli/decode.html#decodeVarLenUint8,BitReader	proc decodeVarLenUint8(br: var BitReader): uint32		209
+nim	decodeWindowBits	nbrotli/decode.html#decodeWindowBits,BitReader,bool	proc decodeWindowBits(br: var BitReader; largeWindow: var bool): int		222
+nim	readHuffmanCode	nbrotli/decode.html#readHuffmanCode,BitReader,int,int	proc readHuffmanCode(br: var BitReader; alphabetMax, alphabetLimit: int): HuffmanDecoder		265
+nim	inverseMoveToFront	nbrotli/decode.html#inverseMoveToFront,seq[uint8]	proc inverseMoveToFront(v: var seq[uint8])		487
+nim	decodeContextMap	nbrotli/decode.html#decodeContextMap,BitReader,int,int,seq[uint8]	proc decodeContextMap(br: var BitReader; contextMapSize: int; numHTrees: var int;\n                 ctxMap: var seq[uint8])		499
+nim	readBlockLength	nbrotli/decode.html#readBlockLength,BitReader,HuffmanDecoder	proc readBlockLength(br: var BitReader; dec: HuffmanDecoder): int		542
+nim	decodeBlockTypeAndLength	nbrotli/decode.html#decodeBlockTypeAndLength,BitReader,int,HuffmanDecoder,HuffmanDecoder,array[,int],int	proc decodeBlockTypeAndLength(br: var BitReader; maxType: int;\n                         typeDec, lenDec: HuffmanDecoder;\n                         rings: var array[6, int]; typeIdx: int)		551
+nim	buildDistanceLUT	nbrotli/decode.html#buildDistanceLUT,int,int,int,seq[uint8],seq[uint64]	proc buildDistanceLUT(postfixBits, directCodes: int; alphabetLimit: int;\n                 extra: var seq[uint8]; offset: var seq[uint64])		575
+nim	BrotliDecompressBorrowed	nbrotli/decode.html#BrotliDecompressBorrowed,openArray[byte]	proc BrotliDecompressBorrowed(data: openArray[byte]): seq[byte]		665
+nim	BrotliDecompress	nbrotli/decode.html#BrotliDecompress,openArray[byte]	proc BrotliDecompress(data: openArray[byte]): seq[byte]		1109

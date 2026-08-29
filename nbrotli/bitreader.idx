@@ -1,0 +1,31 @@
+nimTitle	bitreader	nbrotli/bitreader.html	module nbrotli/bitreader		0
+nim	kBitMask	nbrotli/bitreader.html#kBitMask	const kBitMask		4
+nim	bitMask	nbrotli/bitreader.html#bitMask,uint32	proc bitMask(n: uint32): uint32		16
+nim	BitReader	nbrotli/bitreader.html#BitReader	object BitReader		20
+nim	FastInputSlack	nbrotli/bitreader.html#FastInputSlack	const FastInputSlack		31
+nim	initBitReader	nbrotli/bitreader.html#initBitReader,openArray[byte]	proc initBitReader(data: openArray[byte]): BitReader		33
+nim	initBitReaderBorrowed	nbrotli/bitreader.html#initBitReaderBorrowed,openArray[byte]	proc initBitReaderBorrowed(data: openArray[byte]): BitReader		47
+nim	getByte	nbrotli/bitreader.html#getByte,BitReader,int	proc getByte(br: BitReader; idx: int): byte		66
+nim	feedInput	nbrotli/bitreader.html#feedInput,BitReader,openArray[byte]	proc feedInput(br: var BitReader; data: openArray[byte])		72
+nim	updateGuard	nbrotli/bitreader.html#updateGuard,BitReader	proc updateGuard(br: var BitReader)		95
+nim	warmup	nbrotli/bitreader.html#warmup,BitReader	proc warmup(br: var BitReader): bool		101
+nim	availableBits	nbrotli/bitreader.html#availableBits,BitReader	proc availableBits(br: BitReader): int		110
+nim	checkInputAmount	nbrotli/bitreader.html#checkInputAmount,BitReader	proc checkInputAmount(br: BitReader): bool		112
+nim	getAvailableBits	nbrotli/bitreader.html#getAvailableBits,BitReader	proc getAvailableBits(br: BitReader): uint32		115
+nim	getBitsUnmasked	nbrotli/bitreader.html#getBitsUnmasked,BitReader	proc getBitsUnmasked(br: BitReader): uint64		118
+nim	fillBitWindow	nbrotli/bitreader.html#fillBitWindow,BitReader,uint32	proc fillBitWindow(br: var BitReader; n: uint32)		121
+nim	fillBitWindow16	nbrotli/bitreader.html#fillBitWindow16,BitReader	proc fillBitWindow16(br: var BitReader)		141
+nim	getBits	nbrotli/bitreader.html#getBits,BitReader,uint32	proc getBits(br: var BitReader; n: uint32): uint32		144
+nim	get16BitsUnmasked	nbrotli/bitreader.html#get16BitsUnmasked,BitReader	proc get16BitsUnmasked(br: var BitReader): uint32		148
+nim	pullByte	nbrotli/bitreader.html#pullByte,BitReader	proc pullByte(br: var BitReader): bool		152
+nim	dropBits	nbrotli/bitreader.html#dropBits,BitReader,uint32	proc dropBits(br: var BitReader; n: uint32)		159
+nim	takeBits	nbrotli/bitreader.html#takeBits,BitReader,uint32,uint32	proc takeBits(br: var BitReader; n: uint32; val: var uint32)		163
+nim	readBits	nbrotli/bitreader.html#readBits,BitReader,uint32	proc readBits(br: var BitReader; n: uint32): uint32		167
+nim	safeGetBits	nbrotli/bitreader.html#safeGetBits,BitReader,uint32,uint32	proc safeGetBits(br: var BitReader; n: uint32; val: var uint32): bool		173
+nim	safeReadBits	nbrotli/bitreader.html#safeReadBits,BitReader,uint32,uint32	proc safeReadBits(br: var BitReader; n: uint32; val: var uint32): bool		179
+nim	safeReadBitsMaybeZero	nbrotli/bitreader.html#safeReadBitsMaybeZero,BitReader,uint32,uint32	proc safeReadBitsMaybeZero(br: var BitReader; n: uint32; val: var uint32): bool		184
+nim	jumpToByteBoundary	nbrotli/bitreader.html#jumpToByteBoundary,BitReader	proc jumpToByteBoundary(br: var BitReader): bool		190
+nim	remainingBytes	nbrotli/bitreader.html#remainingBytes,BitReader	proc remainingBytes(br: BitReader): int		202
+nim	copyBytes	nbrotli/bitreader.html#copyBytes,seq[byte],int,BitReader,int	proc copyBytes(dst: var seq[byte]; dstPos: int; br: var BitReader; n: int)		206
+nim	copyBytesToRing	nbrotli/bitreader.html#copyBytesToRing,seq[byte],int,BitReader,int	proc copyBytesToRing(ring: var seq[byte]; ringPos: int; br: var BitReader; n: int)		227
+nim	bitReaderAvailIn	nbrotli/bitreader.html#bitReaderAvailIn,BitReader	proc bitReaderAvailIn(br: BitReader): int		247

@@ -1,0 +1,17 @@
+nimTitle	utils	nbrotli/utils.html	module nbrotli/utils		0
+nim	toBytes	nbrotli/utils.html#toBytes,string	proc toBytes(s: string): seq[byte]		3
+nim	toBytes	nbrotli/utils.html#toBytes,openArray[byte]	proc toBytes(s: openArray[byte]): seq[byte]		9
+nim	toString	nbrotli/utils.html#toString,openArray[byte]	proc toString(b: openArray[byte]): string		14
+nim	toBytesReuse	nbrotli/utils.html#toBytesReuse,string,seq[byte]	proc toBytesReuse(s: string; buf: var seq[byte])		19
+nim	toBytesReuse	nbrotli/utils.html#toBytesReuse,openArray[byte],seq[byte]	proc toBytesReuse(s: openArray[byte]; buf: var seq[byte])		26
+nim	toStringReuse	nbrotli/utils.html#toStringReuse,openArray[byte],string	proc toStringReuse(b: openArray[byte]; buf: var string)		32
+nim	MemFileView	nbrotli/utils.html#MemFileView	object MemFileView		40
+nim	openMemFile	nbrotli/utils.html#openMemFile,string	proc openMemFile(path: string): MemFileView		46
+nim	close	nbrotli/utils.html#close,MemFileView	proc close(v: var MemFileView)		70
+nim	asOpenArray	nbrotli/utils.html#asOpenArray.t,MemFileView	template asOpenArray(v: MemFileView): openArray[byte]		77
+nim	readMemFile	nbrotli/utils.html#readMemFile,string	proc readMemFile(path: string): seq[byte]		83
+nim	readMemFile	nbrotli/utils.html#readMemFile,string,seq[byte]	proc readMemFile(path: string; buf: var seq[byte])		93
+nim	readMemFileInto	nbrotli/utils.html#readMemFileInto,string,seq[byte]	proc readMemFileInto(path: string; buf: var seq[byte]): int		105
+nimgrp	tobytes	nbrotli/utils.html#toBytes-procs-all	proc		3
+nimgrp	tobytesreuse	nbrotli/utils.html#toBytesReuse-procs-all	proc		19
+nimgrp	readmemfile	nbrotli/utils.html#readMemFile-procs-all	proc		83

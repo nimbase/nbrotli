@@ -1,0 +1,6 @@
+nimTitle	encode_store	nbrotli/encode_store.html	module nbrotli/encode_store		0
+nim	StoreChunkSize	nbrotli/encode_store.html#StoreChunkSize	const StoreChunkSize		5
+nim	compressStore	nbrotli/encode_store.html#compressStore,openArray[byte],int	proc compressStore(data: openArray[byte]; wbits = 16): seq[byte]		71
+nim	compressStore	nbrotli/encode_store.html#compressStore,string,int	proc compressStore(data: string; wbits = 16): string		76
+nim	compressStoreToString	nbrotli/encode_store.html#compressStoreToString,openArray[byte],int	proc compressStoreToString(data: openArray[byte]; wbits = 16): string		81
+nimgrp	compressstore	nbrotli/encode_store.html#compressStore-procs-all	proc		71

@@ -1,0 +1,7 @@
+nimTitle	transform_data	nbrotli/transform_data.html	module nbrotli/transform_data		0
+nim	kPrefixSuffixLen	nbrotli/transform_data.html#kPrefixSuffixLen	const kPrefixSuffixLen		3
+nim	kPrefixSuffix	nbrotli/transform_data.html#kPrefixSuffix	const kPrefixSuffix		4
+nim	kPrefixSuffixMap	nbrotli/transform_data.html#kPrefixSuffixMap	const kPrefixSuffixMap		21
+nim	kTransformsData	nbrotli/transform_data.html#kTransformsData	const kTransformsData		30
+nim	kNumTransforms	nbrotli/transform_data.html#kNumTransforms	const kNumTransforms		64
+nim	kCutOffTransforms	nbrotli/transform_data.html#kCutOffTransforms	const kCutOffTransforms		65

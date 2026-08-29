@@ -1,0 +1,9 @@
+nimTitle	context	nbrotli/context.html	module nbrotli/context		0
+nim	kContextLookupTable	nbrotli/context.html#kContextLookupTable	const kContextLookupTable		3
+nim	ContextLSB6	nbrotli/context.html#ContextLSB6	ContextType.ContextLSB6		134
+nim	ContextMSB6	nbrotli/context.html#ContextMSB6	ContextType.ContextMSB6		134
+nim	ContextUTF8	nbrotli/context.html#ContextUTF8	ContextType.ContextUTF8		134
+nim	ContextSIGNED	nbrotli/context.html#ContextSIGNED	ContextType.ContextSIGNED		134
+nim	ContextType	nbrotli/context.html#ContextType	enum ContextType		134
+nim	contextLut	nbrotli/context.html#contextLut,int	proc contextLut(mode: int): array[512, uint8]		140
+nim	brotliContext	nbrotli/context.html#brotliContext,uint8,uint8,int	proc brotliContext(p1, p2: uint8; mode: int): uint8		146

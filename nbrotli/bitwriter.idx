@@ -1,0 +1,8 @@
+nimTitle	bitwriter	nbrotli/bitwriter.html	module nbrotli/bitwriter		0
+nim	BitWriter	nbrotli/bitwriter.html#BitWriter	object BitWriter		5
+nim	initBitWriter	nbrotli/bitwriter.html#initBitWriter	proc initBitWriter(): BitWriter		10
+nim	writeBits	nbrotli/bitwriter.html#writeBits,BitWriter,uint32,uint32	proc writeBits(bw: var BitWriter; n: uint32; v: uint32)		15
+nim	emitByteBoundaryZeroPad	nbrotli/bitwriter.html#emitByteBoundaryZeroPad,BitWriter	proc emitByteBoundaryZeroPad(bw: var BitWriter)		25
+nim	flush	nbrotli/bitwriter.html#flush,BitWriter	proc flush(bw: var BitWriter)		31
+nim	toSeq	nbrotli/bitwriter.html#toSeq,BitWriter	proc toSeq(bw: BitWriter): seq[byte]		40
+nim	len	nbrotli/bitwriter.html#len,BitWriter	proc len(bw: BitWriter): int		42

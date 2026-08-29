@@ -1,0 +1,5 @@
+nimTitle	dictionary	nbrotli/dictionary.html	module nbrotli/dictionary		0
+nim	SizeBitsByLength	nbrotli/dictionary.html#SizeBitsByLength	const SizeBitsByLength		6
+nim	OffsetsByLength	nbrotli/dictionary.html#OffsetsByLength	const OffsetsByLength		12
+nim	DataSize	nbrotli/dictionary.html#DataSize	const DataSize		18
+nim	dictWordOffset	nbrotli/dictionary.html#dictWordOffset,int,int	proc dictWordOffset(len: int; index: int): int		20

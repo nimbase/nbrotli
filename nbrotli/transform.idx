@@ -1,0 +1,29 @@
+nimTitle	transform	nbrotli/transform.html	module nbrotli/transform		0
+nim	Identity	nbrotli/transform.html#Identity	BrotliTransformType.Identity		4
+nim	OmitLast1	nbrotli/transform.html#OmitLast1	BrotliTransformType.OmitLast1		4
+nim	OmitLast2	nbrotli/transform.html#OmitLast2	BrotliTransformType.OmitLast2		4
+nim	OmitLast3	nbrotli/transform.html#OmitLast3	BrotliTransformType.OmitLast3		4
+nim	OmitLast4	nbrotli/transform.html#OmitLast4	BrotliTransformType.OmitLast4		4
+nim	OmitLast5	nbrotli/transform.html#OmitLast5	BrotliTransformType.OmitLast5		4
+nim	OmitLast6	nbrotli/transform.html#OmitLast6	BrotliTransformType.OmitLast6		4
+nim	OmitLast7	nbrotli/transform.html#OmitLast7	BrotliTransformType.OmitLast7		4
+nim	OmitLast8	nbrotli/transform.html#OmitLast8	BrotliTransformType.OmitLast8		4
+nim	OmitLast9	nbrotli/transform.html#OmitLast9	BrotliTransformType.OmitLast9		4
+nim	UppercaseFirst	nbrotli/transform.html#UppercaseFirst	BrotliTransformType.UppercaseFirst		4
+nim	UppercaseAll	nbrotli/transform.html#UppercaseAll	BrotliTransformType.UppercaseAll		4
+nim	OmitFirst1	nbrotli/transform.html#OmitFirst1	BrotliTransformType.OmitFirst1		4
+nim	OmitFirst2	nbrotli/transform.html#OmitFirst2	BrotliTransformType.OmitFirst2		4
+nim	OmitFirst3	nbrotli/transform.html#OmitFirst3	BrotliTransformType.OmitFirst3		4
+nim	OmitFirst4	nbrotli/transform.html#OmitFirst4	BrotliTransformType.OmitFirst4		4
+nim	OmitFirst5	nbrotli/transform.html#OmitFirst5	BrotliTransformType.OmitFirst5		4
+nim	OmitFirst6	nbrotli/transform.html#OmitFirst6	BrotliTransformType.OmitFirst6		4
+nim	OmitFirst7	nbrotli/transform.html#OmitFirst7	BrotliTransformType.OmitFirst7		4
+nim	OmitFirst8	nbrotli/transform.html#OmitFirst8	BrotliTransformType.OmitFirst8		4
+nim	OmitFirst9	nbrotli/transform.html#OmitFirst9	BrotliTransformType.OmitFirst9		4
+nim	ShiftFirst	nbrotli/transform.html#ShiftFirst	BrotliTransformType.ShiftFirst		4
+nim	ShiftAll	nbrotli/transform.html#ShiftAll	BrotliTransformType.ShiftAll		4
+nim	BrotliTransformType	nbrotli/transform.html#BrotliTransformType	enum BrotliTransformType		4
+nim	transformPrefixSlice	nbrotli/transform.html#transformPrefixSlice,int,seq[byte]	proc transformPrefixSlice(idx: int; outSlice: var seq[byte]): int		29
+nim	transformType	nbrotli/transform.html#transformType,int	proc transformType(idx: int): int		38
+nim	transformSuffixSlice	nbrotli/transform.html#transformSuffixSlice,int,seq[byte]	proc transformSuffixSlice(idx: int; outSlice: var seq[byte]): int		41
+nim	transformDictionaryWord	nbrotli/transform.html#transformDictionaryWord,seq[byte],int,openArray[byte],int	proc transformDictionaryWord(dst: var seq[byte]; dstOff: int; word: openArray[byte];\n                        transformIdx: int): int		50
