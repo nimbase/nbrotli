@@ -3,7 +3,7 @@ import std/[os, osproc, strutils]
 import nbrotli
 
 proc hasBrotliCli(): bool =
-  let (_, code) = execCmdEx("brotli --version 2>&1")
+  let (_, code) = execCmdEx("brotli --version")
   code == 0
 
 suite "brotli store encoder (compressStore)":
@@ -93,10 +93,13 @@ suite "brotli store encoder (compressStore)":
     else:
       let data = cast[seq[byte]]("Hello Store via CLI " & "x".repeat(5000))
       let enc = compressStore(data)
-      let tmpBr = "/tmp/nb_store_cli_test.br"
-      let tmpOut = "/tmp/nb_store_cli_test.out"
+      let dir = getTempDir()
+      let tmpBr = dir / "nb_store_cli_test.br"
+      let tmpOut = dir / "nb_store_cli_test.out"
       writeFile(tmpBr, cast[string](enc))
-      let (outp, code) = execCmdEx("brotli -d -c " & tmpBr & " > " & tmpOut & " 2>&1; echo EXIT:$?")
+      let (_, code) = execCmdEx("brotli -d -f " & quoteShell(tmpBr) &
+        " -o " & quoteShell(tmpOut))
+      check code == 0
       # brotli -d should succeed (we check file)
       let decoded = cast[seq[byte]](readFile(tmpOut))
       check decoded == data
@@ -105,12 +108,16 @@ suite "brotli store encoder (compressStore)":
     if not hasBrotliCli():
       skip()
     else:
+      let dir = getTempDir()
       for len in [0,1,65536,65537,70000]:
         var d = newSeq[byte](len)
         for i in 0..<len: d[i]=byte((i*7) and 0xFF)
         let enc = compressStore(d)
-        writeFile("/tmp/nb_store_cli2.br", cast[string](enc))
-        let code = execShellCmd("brotli -d -c /tmp/nb_store_cli2.br > /tmp/nb_store_cli2.out 2>/dev/null")
+        let tmpBr = dir / "nb_store_cli2.br"
+        let tmpOut = dir / "nb_store_cli2.out"
+        writeFile(tmpBr, cast[string](enc))
+        let (_, code) = execCmdEx("brotli -d -f " & quoteShell(tmpBr) &
+          " -o " & quoteShell(tmpOut))
         check code == 0
-        let decoded = cast[seq[byte]](readFile("/tmp/nb_store_cli2.out"))
+        let decoded = cast[seq[byte]](readFile(tmpOut))
         check decoded == d

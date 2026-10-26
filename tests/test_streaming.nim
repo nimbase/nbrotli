@@ -3,16 +3,21 @@ import std/[os, osproc, strutils]
 import nbrotli
 
 proc hasBrotliCli(): bool =
-  let (_, c) = execCmdEx("brotli --version 2>&1")
+  let (_, c) = execCmdEx("brotli --version")
   c == 0
 
 suite "streaming incremental decoder":
   test "one-shot vs chunked feed (q=6)":
     if not hasBrotliCli(): skip()
     let s = "Hello, Brotli! Hello, Brotli! Hello, Brotli! This is a test of pure Nim decoder. "
-    writeFile("/tmp/stream_input.txt", s)
-    discard execShellCmd("cat /tmp/stream_input.txt | brotli -c -q 6 > /tmp/stream.br 2>/dev/null")
-    let data = cast[seq[byte]](readFile("/tmp/stream.br"))
+    let dir = getTempDir()
+    let inPath = dir / "stream_input.txt"
+    let brPath = dir / "stream.br"
+    writeFile(inPath, s)
+    let (_, cc) = execCmdEx("brotli -q 6 -f " & quoteShell(inPath) &
+      " -o " & quoteShell(brPath))
+    check cc == 0
+    let data = cast[seq[byte]](readFile(brPath))
     let expected = decompress(data)
     check cast[string](expected) == s
     for chunk in [1, 7, 28, 100]:
@@ -58,9 +63,14 @@ suite "streaming incremental decoder":
   test "large window chunked":
     if not hasBrotliCli(): skip()
     let s = "LargeWindow chunked test ".repeat(5000) # ~125k
-    writeFile("/tmp/stream_lw.txt", s)
-    discard execShellCmd("brotli --large_window=25 -q 4 -c /tmp/stream_lw.txt > /tmp/stream_lw.br 2>/dev/null")
-    let data = cast[seq[byte]](readFile("/tmp/stream_lw.br"))
+    let dir = getTempDir()
+    let inPath = dir / "stream_lw.txt"
+    let brPath = dir / "stream_lw.br"
+    writeFile(inPath, s)
+    let (_, cc) = execCmdEx("brotli --large_window=25 -q 4 -f " &
+      quoteShell(inPath) & " -o " & quoteShell(brPath))
+    check cc == 0
+    let data = cast[seq[byte]](readFile(brPath))
     let expected = decompress(data)
     check cast[string](expected) == s
     var dec = initDecoder()

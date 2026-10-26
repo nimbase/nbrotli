@@ -3,7 +3,7 @@ import std/[os, osproc, strutils]
 import nbrotli
 
 proc hasBrotliCli(): bool =
-  let (_, code) = execCmdEx("brotli --version 2>&1")
+  let (_, code) = execCmdEx("brotli --version")
   code == 0
 
 proc ensureTempDir() =
@@ -34,7 +34,8 @@ suite "cli exhaustive q0..11 decode":
         let inPath = "./tests/temp/exh_q" & $q & "_" & name & ".txt"
         let brPath = "./tests/temp/exh_q" & $q & "_" & name & ".br"
         writeFile(inPath, s)
-        let code = execShellCmd("brotli -c -q " & $q & " " & inPath & " > " & brPath & " 2>/dev/null")
+        let (_, code) = execCmdEx("brotli -q " & $q & " -f " &
+          quoteShell(inPath) & " -o " & quoteShell(brPath))
         check code == 0
         # decompress via one-shot
         let data = readMemFile(brPath)
@@ -61,7 +62,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       let inPath = "./tests/temp/exh_w" & $w & ".txt"
       let brPath = "./tests/temp/exh_w" & $w & ".br"
       writeFile(inPath, s)
-      let code = execShellCmd("brotli -w " & $w & " -q 6 -c " & inPath & " > " & brPath & " 2>/dev/null")
+      let (_, code) = execCmdEx("brotli -w " & $w & " -q 6 -f " &
+        quoteShell(inPath) & " -o " & quoteShell(brPath))
       check code == 0
       let dec = decompressFromFile(brPath)
       check toString(dec) == s
@@ -74,7 +76,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       let inPath = "./tests/temp/exh_lw" & $w & ".txt"
       let brPath = "./tests/temp/exh_lw" & $w & ".br"
       writeFile(inPath, s)
-      let code = execShellCmd("brotli --large_window=" & $w & " -q 6 -c " & inPath & " > " & brPath & " 2>/dev/null")
+      let (_, code) = execCmdEx("brotli --large_window=" & $w & " -q 6 -f " &
+        quoteShell(inPath) & " -o " & quoteShell(brPath))
       check code == 0
       check toString(decompressFromFile(brPath)) == s
     # 500k with w30
@@ -82,7 +85,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
     let inBig = "./tests/temp/exh_big.txt"
     let brBig = "./tests/temp/exh_big_w30.br"
     writeFile(inBig, big)
-    let codeBig = execShellCmd("brotli --large_window=30 -q 4 -c " & inBig & " > " & brBig & " 2>/dev/null")
+    let (_, codeBig) = execCmdEx("brotli --large_window=30 -q 4 -f " &
+      quoteShell(inBig) & " -o " & quoteShell(brBig))
     check codeBig == 0
     let decBig = decompressFromFile(brBig)
     check decBig == toBytes(big)
@@ -97,7 +101,8 @@ suite "nim store -> cli decode exhaustive ./tests/temp":
       let brPath = "./tests/temp/nim_w" & $w & ".br"
       let outPath = "./tests/temp/nim_w" & $w & ".out"
       writeFile(brPath, toString(enc))
-      let code = execShellCmd("brotli -d -c " & brPath & " > " & outPath & " 2>/dev/null")
+      let (_, code) = execCmdEx("brotli -d -f " & quoteShell(brPath) &
+        " -o " & quoteShell(outPath))
       check code == 0
       check toBytes(readFile(outPath)) == toBytes(s)
       # via compressFile / compressFromFile
@@ -119,7 +124,8 @@ suite "nim store -> cli decode exhaustive ./tests/temp":
       let brPath = "./tests/temp/store_len" & $len & ".br"
       let outPath = "./tests/temp/store_len" & $len & ".out"
       writeFile(brPath, toString(enc))
-      let code = execShellCmd("brotli -d -c " & brPath & " > " & outPath & " 2>/dev/null")
+      let (_, code) = execCmdEx("brotli -d -f " & quoteShell(brPath) &
+        " -o " & quoteShell(outPath))
       check code == 0
       var buf: seq[byte] = @[]
       readMemFile(outPath, buf)
