@@ -22,6 +22,7 @@ const
   ErrFormatPadding1* = -14
   ErrFormatPadding2* = -15
   ErrFormatDistance* = -16
+  ErrFormatBlockSwitch* = -17
   ErrUnreachable* = -31
 
 func raiseBrotli*(code: int, msg: string) =
@@ -552,7 +553,11 @@ proc decodeBlockTypeAndLength*(br: var BitReader, maxType: int,
     typeDec, lenDec: HuffmanDecoder, rings: var array[6, int], typeIdx: int) =
   discard lenDec
   if maxType <= 1:
-    raiseBrotli(ErrFormatBlockLength1, "block type")
+    # CVE-2026-111497: invalid block switch (stream declares a single block
+    # type, then asks to switch). Must be a permanent format error, never
+    # "needs more input". Mirrors upstream DecodeBlockTypeAndLength returning
+    # BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH (-17).
+    raiseBrotli(ErrFormatBlockSwitch, "block switch")
   let blockType = if typeDec.maxLen == 0: typeDec.maps[0][0] else: typeDec.decodeSymbol(br)
   # ring is two consecutive ints per treeType
   var rb0 = rings[typeIdx*2]

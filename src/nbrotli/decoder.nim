@@ -42,10 +42,22 @@ proc hasError*(d: BrotliDecoder): bool = d.errorCode != 0
 proc errorCode*(d: BrotliDecoder): int = d.errorCode
 proc errorMsg*(d: BrotliDecoder): string = d.errorMsg
 
+func classifyBrotliError*(code: int): BrotliDecoderResult =
+  ## CVE-2026-111497: map a one-shot BrotliError code to the streaming result.
+  ## An invalid block switch is a permanent format error (Error, fail fast).
+  ## All other codes stay NeedsMoreInput so truncated input can be completed
+  ## by further feed() calls. Mirrors upstream BROTLI_SAFE vs
+  ## BROTLI_SAFE_WITH_STATUS: only the three block-switch sites are fatal.
+  if code == ErrFormatBlockSwitch:
+    Error
+  else:
+    NeedsMoreInput
+
 proc tryDecompress(d: var BrotliDecoder): BrotliDecoderResult =
   ## Attempt to decompress current compressed buffer.
   ## On success, set decompressed/finished. On truncation, return NeedsMoreInput.
   ## On format error, set error and return Error.
+  if d.errorCode != 0: return Error
   if d.finished: return Success
   if d.compressed.len == 0:
     return NeedsMoreInput
@@ -56,6 +68,16 @@ proc tryDecompress(d: var BrotliDecoder): BrotliDecoderResult =
     d.outputPos = 0
     return Success
   except BrotliError as e:
+    # CVE-2026-111497: an invalid block switch (single declared block type,
+    # then a switch) is a permanent format error. It must fail fast like
+    # upstream BROTLI_SAFE_WITH_STATUS, never be treated as "needs more input"
+    # (which would retry forever / continue on corrupted state).
+    # Other BrotliErrors remain NeedsMoreInput for the buffered wrapper so
+    # truncated input can still be completed by further feed() calls.
+    if classifyBrotliError(e.code) == Error:
+      d.errorCode = e.code
+      d.errorMsg = e.msg
+      return Error
     # For incremental decoding, truncated input manifests as BrotliError with
     # format codes. Treat as NeedsMoreInput to allow further feed, without
     # setting persistent errorCode (so next feed can succeed). Only set
