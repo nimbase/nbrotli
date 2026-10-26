@@ -3,8 +3,20 @@ import std/[os, osproc, strutils]
 import nbrotli
 
 proc hasBrotliCli(): bool =
-  let (_, code) = execCmdEx("brotli --version")
+  let (outp, code) = execCmdEx("brotli --version")
+  if code == 0:
+    echo "brotli CLI: ", outp.strip()
   code == 0
+
+proc hexDump(b: openArray[byte], maxBytes = 64): string =
+  ## Compact hex for CI diagnostics (only printed on mismatch).
+  let n = min(b.len, maxBytes)
+  result = newStringOfCap(n * 3)
+  for i in 0..<n:
+    result.add(toHex(b[i].int, 2))
+    if i mod 16 == 15: result.add("\n  ") else: result.add(" ")
+  if b.len > maxBytes:
+    result.add("... (+" & $(b.len - maxBytes) & " more)")
 
 proc ensureTempDir() =
   createDir("./tests/temp")
@@ -40,6 +52,12 @@ suite "cli exhaustive q0..11 decode":
         # decompress via one-shot
         let data = readMemFile(brPath)
         let dec = decompress(data)
+        if dec != toBytes(s):
+          echo "MISMATCH q=", q, " corpus=", name,
+            " slen=", s.len, " inSize=", getFileSize(inPath),
+            " brSize=", getFileSize(brPath), " declen=", dec.len
+          echo "  br hex:\n  ", hexDump(data)
+          echo "  dec: ", dec
         check dec == toBytes(s)
         # via memfiles higher-level
         let dec2 = decompressFromFile(brPath)
@@ -89,6 +107,10 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       quoteShell(inBig) & " -o " & quoteShell(brBig))
     check codeBig == 0
     let decBig = decompressFromFile(brBig)
+    if decBig != toBytes(big):
+      echo "MISMATCH w30 500k: biglen=", big.len,
+        " inSize=", getFileSize(inBig),
+        " brSize=", getFileSize(brBig), " declen=", decBig.len
     check decBig == toBytes(big)
 
 suite "nim store -> cli decode exhaustive ./tests/temp":
