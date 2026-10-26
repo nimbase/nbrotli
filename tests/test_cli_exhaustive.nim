@@ -21,12 +21,19 @@ proc hexDump(b: openArray[byte], maxBytes = 64): string =
 proc ensureTempDir() =
   createDir("./tests/temp")
 
+proc tpath(name: string): string =
+  ## Absolute temp path. NOTE: relative ./tests/temp paths break the external
+  ## brotli CLI roundtrip on Windows runners (input file observed 1+ bytes
+  ## longer on disk than the written string), while absolute getTempDir()
+  ## paths roundtrip byte-exact. Keep all CLI artifact paths absolute.
+  getTempDir() / name
+
 proc rndBytes(len: int): seq[byte] =
   result.setLen(len)
   for i in 0..<len: result[i] = byte((i*31 + 7) and 0xFF)
 
 suite "cli exhaustive q0..11 decode":
-  test "all qualities 0..11 on multiple corpora via ./tests/temp":
+  test "all qualities 0..11 on multiple corpora via temp dir":
     if not hasBrotliCli(): skip()
     ensureTempDir()
     let corpora = [
@@ -43,8 +50,8 @@ suite "cli exhaustive q0..11 decode":
         # known: q10/11 with random 1k/100k hits dict edge not yet fully decoded (Err -12)
         if q >= 10 and (name == "1k_random" or name == "100k_random"):
           continue
-        let inPath = "./tests/temp/exh_q" & $q & "_" & name & ".txt"
-        let brPath = "./tests/temp/exh_q" & $q & "_" & name & ".br"
+        let inPath = tpath("exh_q" & $q & "_" & name & ".txt")
+        let brPath = tpath("exh_q" & $q & "_" & name & ".br")
         writeFile(inPath, s)
         let (_, code) = execCmdEx("brotli -q " & $q & " -f " &
           quoteShell(inPath) & " -o " & quoteShell(brPath))
@@ -77,8 +84,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
     ensureTempDir()
     for w in [10, 16, 20, 24]:
       let s = "LargeWindow w=" & $w & " " & "abc".repeat(5000)
-      let inPath = "./tests/temp/exh_w" & $w & ".txt"
-      let brPath = "./tests/temp/exh_w" & $w & ".br"
+      let inPath = tpath("exh_w" & $w & ".txt")
+      let brPath = tpath("exh_w" & $w & ".br")
       writeFile(inPath, s)
       let (_, code) = execCmdEx("brotli -w " & $w & " -q 6 -f " &
         quoteShell(inPath) & " -o " & quoteShell(brPath))
@@ -91,8 +98,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       check decompress(buf) == toBytes(s)
     for w in [25, 27, 30]:
       let s = "Hello Large Window! ".repeat(5000) # ~100k
-      let inPath = "./tests/temp/exh_lw" & $w & ".txt"
-      let brPath = "./tests/temp/exh_lw" & $w & ".br"
+      let inPath = tpath("exh_lw" & $w & ".txt")
+      let brPath = tpath("exh_lw" & $w & ".br")
       writeFile(inPath, s)
       let (_, code) = execCmdEx("brotli --large_window=" & $w & " -q 6 -f " &
         quoteShell(inPath) & " -o " & quoteShell(brPath))
@@ -100,8 +107,8 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       check toString(decompressFromFile(brPath)) == s
     # 500k with w30
     let big = cast[string](rndBytes(500_000))
-    let inBig = "./tests/temp/exh_big.txt"
-    let brBig = "./tests/temp/exh_big_w30.br"
+    let inBig = tpath("exh_big.txt")
+    let brBig = tpath("exh_big_w30.br")
     writeFile(inBig, big)
     let (_, codeBig) = execCmdEx("brotli --large_window=30 -q 4 -f " &
       quoteShell(inBig) & " -o " & quoteShell(brBig))
@@ -113,23 +120,23 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
         " brSize=", getFileSize(brBig), " declen=", decBig.len
     check decBig == toBytes(big)
 
-suite "nim store -> cli decode exhaustive ./tests/temp":
+suite "nim store -> cli decode exhaustive":
   test "store wbits 10..24 roundtrip via brotli -d":
     if not hasBrotliCli(): skip()
     ensureTempDir()
     for w in [10, 11, 16, 17, 18, 20, 24]:
       let s = "store via cli w=" & $w & " " & "x".repeat(20000)
       let enc = compress(toBytes(s), w)
-      let brPath = "./tests/temp/nim_w" & $w & ".br"
-      let outPath = "./tests/temp/nim_w" & $w & ".out"
+      let brPath = tpath("nim_w" & $w & ".br")
+      let outPath = tpath("nim_w" & $w & ".out")
       writeFile(brPath, toString(enc))
       let (_, code) = execCmdEx("brotli -d -f " & quoteShell(brPath) &
         " -o " & quoteShell(outPath))
       check code == 0
       check toBytes(readFile(outPath)) == toBytes(s)
       # via compressFile / compressFromFile
-      let inPath = "./tests/temp/nim_file_w" & $w & ".txt"
-      let brPath2 = "./tests/temp/nim_file_w" & $w & ".br"
+      let inPath = tpath("nim_file_w" & $w & ".txt")
+      let brPath2 = tpath("nim_file_w" & $w & ".br")
       writeFile(inPath, s)
       compressFile(inPath, brPath2, w)
       let dec2 = decompressFromFile(brPath2)
@@ -143,8 +150,8 @@ suite "nim store -> cli decode exhaustive ./tests/temp":
     for len in [0, 1, 1024, 65535, 65536, 65537, 70000, 100_000]:
       var data = rndBytes(len)
       let enc = compress(data)
-      let brPath = "./tests/temp/store_len" & $len & ".br"
-      let outPath = "./tests/temp/store_len" & $len & ".out"
+      let brPath = tpath("store_len" & $len & ".br")
+      let outPath = tpath("store_len" & $len & ".out")
       writeFile(brPath, toString(enc))
       let (_, code) = execCmdEx("brotli -d -f " & quoteShell(brPath) &
         " -o " & quoteShell(outPath))
@@ -153,7 +160,7 @@ suite "nim store -> cli decode exhaustive ./tests/temp":
       readMemFile(outPath, buf)
       check buf == data
       # also via fileio
-      let inPath = "./tests/temp/store_in" & $len & ".txt"
+      let inPath = tpath("store_in" & $len & ".txt")
       writeFile(inPath, toString(data))
       let enc2 = compressFromFile(inPath)
       check decompress(enc2) == data
@@ -162,11 +169,11 @@ suite "fileio via memfiles vs regular":
   test "compressFromFile equals compressFile and decompressFromFile equals decompressFile":
     ensureTempDir()
     let s = "fileio consistency ".repeat(3000)
-    let inPath = "./tests/temp/cons_in.txt"
-    let br1 = "./tests/temp/cons1.br"
-    let br2 = "./tests/temp/cons2.br"
-    let out1 = "./tests/temp/cons_out1.txt"
-    let out2 = "./tests/temp/cons_out2.txt"
+    let inPath = tpath("cons_in.txt")
+    let br1 = tpath("cons1.br")
+    let br2 = tpath("cons2.br")
+    let out1 = tpath("cons_out1.txt")
+    let out2 = tpath("cons_out2.txt")
     writeFile(inPath, s)
     compressFile(inPath, br1)
     let encMem = compressFromFile(inPath)
