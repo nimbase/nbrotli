@@ -44,7 +44,9 @@ suite "brotli decompress q=1 (low quality, no dictionary)":
     check cast[string](decompress(c)) == s
   test "binary roundtrip":
     if not hasBrotliCli(): skip()
-    let s = cast[string](@[0'u8, 1, 2, 255, 128, 64, 32, 16, 8, 4, 2, 1])
+    # NOTE: toString(), not cast[string](): the cast drops Nim's
+    # NUL-terminator invariant and Windows writeFile over-reads it.
+    let s = toString(@[0'u8, 1, 2, 255, 128, 64, 32, 16, 8, 4, 2, 1])
     # use string with binary
     let c = brotliCompress(s, 1)
     check decompress(c) == cast[seq[byte]](s)

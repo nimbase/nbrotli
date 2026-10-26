@@ -22,10 +22,7 @@ proc ensureTempDir() =
   createDir("./tests/temp")
 
 proc tpath(name: string): string =
-  ## Absolute temp path. NOTE: relative ./tests/temp paths break the external
-  ## brotli CLI roundtrip on Windows runners (input file observed 1+ bytes
-  ## longer on disk than the written string), while absolute getTempDir()
-  ## paths roundtrip byte-exact. Keep all CLI artifact paths absolute.
+  ## Absolute temp path (keeps the repo tree clean; also safe for parallel runs).
   getTempDir() / name
 
 proc rndBytes(len: int): seq[byte] =
@@ -36,14 +33,19 @@ suite "cli exhaustive q0..11 decode":
   test "all qualities 0..11 on multiple corpora via temp dir":
     if not hasBrotliCli(): skip()
     ensureTempDir()
+    # NOTE: build binary inputs with toString(), NOT cast[string](): the cast
+    # reinterprets the seq payload without Nim's NUL-terminator invariant, and
+    # Windows writeFile (fprintf-based) over-reads such strings, appending heap
+    # garbage to the file (seen: trailing 0x6D on the binary corpus). toString
+    # copies into a proper string, so files are byte-exact on all platforms.
     let corpora = [
       ("empty", ""),
       ("hello", "Hello world"),
       ("repeat", "Hello, Brotli! ".repeat(5)),
       ("complex81", "Hello, Brotli! Hello, Brotli! Hello, Brotli! This is a test of pure Nim decoder. "),
-      ("binary", cast[string](@[0'u8,1,2,255,128,64,32,16,8,4,2,1])),
-      ("1k_random", cast[string](rndBytes(1024))),
-      ("100k_random", cast[string](rndBytes(100_000)))
+      ("binary", toString(@[0'u8,1,2,255,128,64,32,16,8,4,2,1])),
+      ("1k_random", toString(rndBytes(1024))),
+      ("100k_random", toString(rndBytes(100_000)))
     ]
     for q in 0..11:
       for (name, s) in corpora:
@@ -106,7 +108,7 @@ suite "cli exhaustive wbits 10..24 and large window 25..30":
       check code == 0
       check toString(decompressFromFile(brPath)) == s
     # 500k with w30
-    let big = cast[string](rndBytes(500_000))
+    let big = toString(rndBytes(500_000))
     let inBig = tpath("exh_big.txt")
     let brBig = tpath("exh_big_w30.br")
     writeFile(inBig, big)

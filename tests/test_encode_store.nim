@@ -96,7 +96,9 @@ suite "brotli store encoder (compressStore)":
       let dir = getTempDir()
       let tmpBr = dir / "nb_store_cli_test.br"
       let tmpOut = dir / "nb_store_cli_test.out"
-      writeFile(tmpBr, cast[string](enc))
+      # NOTE: toString(), not cast[string](): the cast drops Nim's
+      # NUL-terminator invariant and Windows writeFile over-reads it.
+      writeFile(tmpBr, toString(enc))
       let (_, code) = execCmdEx("brotli -d -f " & quoteShell(tmpBr) &
         " -o " & quoteShell(tmpOut))
       check code == 0
@@ -115,7 +117,9 @@ suite "brotli store encoder (compressStore)":
         let enc = compressStore(d)
         let tmpBr = dir / "nb_store_cli2.br"
         let tmpOut = dir / "nb_store_cli2.out"
-        writeFile(tmpBr, cast[string](enc))
+        # NOTE: toString(), not cast[string](): the cast drops Nim's
+        # NUL-terminator invariant and Windows writeFile over-reads it.
+        writeFile(tmpBr, toString(enc))
         let (_, code) = execCmdEx("brotli -d -f " & quoteShell(tmpBr) &
           " -o " & quoteShell(tmpOut))
         check code == 0
