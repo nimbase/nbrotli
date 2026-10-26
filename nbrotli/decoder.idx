@@ -12,7 +12,8 @@ nim	isFinished	nbrotli/decoder.html#isFinished,BrotliDecoder	proc isFinished(d: 
 nim	hasError	nbrotli/decoder.html#hasError,BrotliDecoder	proc hasError(d: BrotliDecoder): bool		41
 nim	errorCode	nbrotli/decoder.html#errorCode,BrotliDecoder	proc errorCode(d: BrotliDecoder): int		42
 nim	errorMsg	nbrotli/decoder.html#errorMsg,BrotliDecoder	proc errorMsg(d: BrotliDecoder): string		43
-nim	decodeSome	nbrotli/decoder.html#decodeSome,BrotliDecoder,seq[byte],int	proc decodeSome(d: var BrotliDecoder; outBuf: var seq[byte]; maxOut = 65536): BrotliDecoderResult		75
-nim	decompressIncremental	nbrotli/decoder.html#decompressIncremental,openArray[byte],seq[int]	proc decompressIncremental(data: openArray[byte]; chunkSizes: seq[int]): seq[byte]		99
-nim	decompressAll	nbrotli/decoder.html#decompressAll,BrotliDecoder	proc decompressAll(d: var BrotliDecoder): seq[byte]		115
+nim	classifyBrotliError	nbrotli/decoder.html#classifyBrotliError,int	proc classifyBrotliError(code: int): BrotliDecoderResult		45
+nim	decodeSome	nbrotli/decoder.html#decodeSome,BrotliDecoder,seq[byte],int	proc decodeSome(d: var BrotliDecoder; outBuf: var seq[byte]; maxOut = 65536): BrotliDecoderResult		97
+nim	decompressIncremental	nbrotli/decoder.html#decompressIncremental,openArray[byte],seq[int]	proc decompressIncremental(data: openArray[byte]; chunkSizes: seq[int]): seq[byte]		121
+nim	decompressAll	nbrotli/decoder.html#decompressAll,BrotliDecoder	proc decompressAll(d: var BrotliDecoder): seq[byte]		137
 nimgrp	feed	nbrotli/decoder.html#feed-procs-all	proc		29
